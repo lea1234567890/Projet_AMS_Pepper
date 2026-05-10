@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ChoregrapheProject xmlns="http://www.aldebaran-robotics.com/schema/choregraphe/project.xsd" xar_version="3">
+  <Box name="root" id="-1" localization="8" tooltip="Root box" x="0" y="0">
+    <bitmap>media/images/box/root.png</bitmap>
+    <script language="4"><content><![CDATA[]]></content></script>
+    <Input name="onLoad" type="1" type_size="1" nature="0" inner="1" id="1" />
+    <Input name="onStart" type="1" type_size="1" nature="2" inner="0" id="2" />
+    <Input name="onStop" type="1" type_size="1" nature="3" inner="0" id="3" />
+    <Output name="onStopped" type="1" type_size="1" nature="1" inner="0" id="4" />
+
+    <Timeline enable="0">
+      <BehaviorLayer name="behavior_layer1">
+        <BehaviorKeyframe name="keyframe1" index="1">
+          <Diagram scale="88">
+
+            <Box name="AudioBridge" id="1" localization="8" tooltip="Pepper audio -> backend TCP" x="280" y="260">
+              <bitmap>media/images/box/box-python-script.png</bitmap>
+              <script language="4"><content><![CDATA[
+import socket
+import struct
+import time
+
+class MyClass(GeneratedClass):
+    MAC_IP = "192.168.1.50"
+    AUDIO_PORT = 5555
+    AUDIO_SAMPLE_RATE = 16000
+    AUDIO_CHANNEL_FLAG = 3
+    AUDIO_DEINTERLEAVE = 0
+
+    FRAME_HEADER_FMT = "<III"
+    FRAME_HEADER_SIZE = struct.calcsize(FRAME_HEADER_FMT)
+
+    def __init__(self):
+        GeneratedClass.__init__(self)
+        self._running = False
+        self._audio_service = None
+        self._sock = None
+        self._last_reconnect = 0.0
+
+    def onLoad(self):
+        try:
+            self._audio_service = self.session().service("ALAudioDevice")
+        except Exception as e:
+            self.logger.error("AudioBridge init error: %s" % str(e))
+
+    def onUnload(self):
+        self._stop_audio()
+
+    def onInput_onStart(self):
+        if self._running:
+            return
+        self._running = True
+        self._connect_socket(True)
+        self._start_audio()
+
+    def onInput_onStop(self):
+        self._stop_audio()
+        self._close_socket()
+        self._running = False
+        self.onStopped()
+
+    def _start_audio(self):
+        if not self._audio_service:
+            self.logger.error("AudioBridge: ALAudioDevice indisponible")
+            return
+        try:
+            self._audio_service.setClientPreferences(
+                self.getName(),
+                int(self.AUDIO_SAMPLE_RATE),
+                int(self.AUDIO_CHANNEL_FLAG),
+                int(self.AUDIO_DEINTERLEAVE),
+            )
+            self._audio_service.subscribe(self.getName())
+            self.logger.info("AudioBridge subscribed")
+        except Exception as e:
+            self.logger.error("AudioBridge subscribe error: %s" % str(e))
+
+    def _stop_audio(self):
+        try:
+            if self._audio_service:
+                self._audio_service.unsubscribe(self.getName())
+        except Exception:
+            pass
+
+    def processRemote(self, nbOfChannels, nbrOfSamplesByChannel, aTimeStamp, buffer):
+        if not self._running or not buffer:
+            return
+
+        try:
+            if aTimeStamp and len(aTimeStamp) >= 2:
+                ts_sec = int(aTimeStamp[0])
+                ts_usec = int(aTimeStamp[1])
+            else:
+                now = time.time()
+                ts_sec = int(now)
+                ts_usec = int((now - ts_sec) * 1000000)
+        except Exception:
+            now = time.time()
+            ts_sec = int(now)
+            ts_usec = int((now - ts_sec) * 1000000)
+
+        self._send_frame(buffer, ts_sec, ts_usec)
+
+    def _send_frame(self, payload, ts_sec, ts_usec):
+        if not payload:
+            return
+        try:
+            self._connect_socket(False)
+            if not self._sock:
+                return
+            header = struct.pack(self.FRAME_HEADER_FMT, len(payload), int(ts_sec), int(ts_usec))
+            self._sock.sendall(header + payload)
+        except Exception:
+            self._close_socket()
+
+    def _connect_socket(self, force):
+        if self._sock:
+            return
+        now = time.time()
+        if not force and (now - self._last_reconnect) < 1.0:
+            return
+        self._last_reconnect = now
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(1.0)
+            sock.connect((self.MAC_IP, int(self.AUDIO_PORT)))
+            self._sock = sock
+            self.logger.info("AudioBridge connected %s:%s" % (self.MAC_IP, self.AUDIO_PORT))
+        except Exception:
+            self._sock = None
+
+    def _close_socket(self):
+        if self._sock:
+            try:
+                self._sock.close()
+            except Exception:
+                pass
+        self._sock = None
+              ]]></content></script>
+              <Input name="onLoad" type="1" type_size="1" nature="0" inner="1" id="1" />
+              <Input name="onStart" type="1" type_size="1" nature="2" inner="0" id="2" />
+              <Input name="onStop" type="1" type_size="1" nature="3" inner="0" id="3" />
+              <Output name="onStopped" type="1" type_size="1" nature="1" inner="0" id="4" />
+            </Box>
+
+            <Box name="VideoBridge" id="2" localization="8" tooltip="Pepper video -> backend TCP" x="620" y="260">
+              <bitmap>media/images/box/box-python-script.png</bitmap>
+              <script language="4"><content><![CDATA[
+import socket
+import struct
+import threading
+import time
+
+class MyClass(GeneratedClass):
+    MAC_IP = "192.168.1.50"
+    VIDEO_PORT = 5557
+
+    CAMERA_ID = 0
+    CAMERA_RESOLUTION = 1
+    CAMERA_COLOR_SPACE = 11
+    CAMERA_FPS = 8
+
+    FRAME_HEADER_FMT = "<III"
+
+    def __init__(self):
+        GeneratedClass.__init__(self)
+        self._running = False
+        self._video_service = None
+        self._sock = None
+        self._video_handle = None
+        self._thread = None
+        self._last_reconnect = 0.0
+
+    def onLoad(self):
+        try:
+            self._video_service = self.session().service("ALVideoDevice")
+        except Exception as e:
+            self.logger.error("VideoBridge init error: %s" % str(e))
+
+    def onUnload(self):
+        self._stop_video()
+
+    def onInput_onStart(self):
+        if self._running:
+            return
+        self._running = True
+        self._connect_socket(True)
+        self._start_video()
+
+    def onInput_onStop(self):
+        self._stop_video()
+        self._close_socket()
+        self._running = False
+        self.onStopped()
+
+    def _start_video(self):
+        if not self._video_service:
+            self.logger.error("VideoBridge: ALVideoDevice indisponible")
+            return
+        try:
+            self._video_handle = self._video_service.subscribeCamera(
+                self.getName() + "_cam",
+                int(self.CAMERA_ID),
+                int(self.CAMERA_RESOLUTION),
+                int(self.CAMERA_COLOR_SPACE),
+                int(self.CAMERA_FPS),
+            )
+            self._thread = threading.Thread(target=self._video_loop)
+            self._thread.daemon = True
+            self._thread.start()
+            self.logger.info("VideoBridge subscribed")
+        except Exception as e:
+            self.logger.error("VideoBridge subscribe error: %s" % str(e))
+
+    def _stop_video(self):
+        if self._video_service and self._video_handle:
+            try:
+                self._video_service.unsubscribe(self._video_handle)
+            except Exception:
+                pass
+        self._video_handle = None
+        if self._thread and self._thread.is_alive():
+            self._thread.join(1.5)
+        self._thread = None
+
+    def _video_loop(self):
+        sleep_s = 1.0 / float(max(1, int(self.CAMERA_FPS)))
+        while self._running:
+            try:
+                if not self._video_handle:
+                    time.sleep(sleep_s)
+                    continue
+                frame = self._video_service.getImageRemote(self._video_handle)
+                if not frame or len(frame) < 7:
+                    time.sleep(sleep_s)
+                    continue
+
+                ts_sec = int(frame[4]) if frame[4] is not None else int(time.time())
+                ts_usec = int(frame[5]) if frame[5] is not None else 0
+                payload = frame[6]
+                if payload:
+                    self._send_frame(payload, ts_sec, ts_usec)
+            except Exception:
+                self._close_socket()
+            time.sleep(sleep_s)
+
+    def _send_frame(self, payload, ts_sec, ts_usec):
+        try:
+            self._connect_socket(False)
+            if not self._sock:
+                return
+            header = struct.pack(self.FRAME_HEADER_FMT, len(payload), int(ts_sec), int(ts_usec))
+            self._sock.sendall(header + payload)
+        except Exception:
+            self._close_socket()
+
+    def _connect_socket(self, force):
+        if self._sock:
+            return
+        now = time.time()
+        if not force and (now - self._last_reconnect) < 1.0:
+            return
+        self._last_reconnect = now
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(1.0)
+            sock.connect((self.MAC_IP, int(self.VIDEO_PORT)))
+            self._sock = sock
+            self.logger.info("VideoBridge connected %s:%s" % (self.MAC_IP, self.VIDEO_PORT))
+        except Exception:
+            self._sock = None
+
+    def _close_socket(self):
+        if self._sock:
+            try:
+                self._sock.close()
+            except Exception:
+                pass
+        self._sock = None
+              ]]></content></script>
+              <Input name="onLoad" type="1" type_size="1" nature="0" inner="1" id="1" />
+              <Input name="onStart" type="1" type_size="1" nature="2" inner="0" id="2" />
+              <Input name="onStop" type="1" type_size="1" nature="3" inner="0" id="3" />
+              <Output name="onStopped" type="1" type_size="1" nature="1" inner="0" id="4" />
+            </Box>
+
+            <Box name="TTSControl" id="3" localization="8" tooltip="Backend TTS commands -> Pepper TTS" x="960" y="260">
+              <bitmap>media/images/box/box-python-script.png</bitmap>
+              <script language="4"><content><![CDATA[
+import socket
+import struct
+import threading
+
+class MyClass(GeneratedClass):
+    CONTROL_PORT = 5558
+    FRAME_HEADER_FMT = "<III"
+    FRAME_HEADER_SIZE = struct.calcsize(FRAME_HEADER_FMT)
+    CONTROL_PREFIX = "TTS:"
+
+    def __init__(self):
+        GeneratedClass.__init__(self)
+        self._running = False
+        self._tts_service = None
+        self._thread = None
+        self._server = None
+
+    def onLoad(self):
+        try:
+            self._tts_service = self.session().service("ALTextToSpeech")
+        except Exception as e:
+            self.logger.error("TTSControl init error: %s" % str(e))
+
+    def onUnload(self):
+        self._stop_server()
+
+    def onInput_onStart(self):
+        if self._running:
+            return
+        self._running = True
+        self._thread = threading.Thread(target=self._loop)
+        self._thread.daemon = True
+        self._thread.start()
+        self.logger.info("TTSControl started")
+
+    def onInput_onStop(self):
+        self._stop_server()
+        self._running = False
+        self.onStopped()
+
+    def _loop(self):
+        try:
+            srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            srv.bind(("0.0.0.0", int(self.CONTROL_PORT)))
+            srv.listen(1)
+            srv.settimeout(1.0)
+            self._server = srv
+        except Exception as e:
+            self.logger.error("TTSControl server error: %s" % str(e))
+            self._server = None
+            return
+
+        while self._running:
+            try:
+                conn, _addr = self._server.accept()
+            except socket.timeout:
+                continue
+            except Exception:
+                break
+
+            try:
+                while self._running:
+                    payload = self._recv_typed_frame(conn)
+                    if payload is None:
+                        break
+                    self._handle_payload(payload)
+            except Exception:
+                pass
+            finally:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+
+        self._stop_server()
+
+    def _recv_typed_frame(self, conn):
+        header = self._recv_exact(conn, self.FRAME_HEADER_SIZE)
+        if not header:
+            return None
+        size, _ts_sec, _ts_usec = struct.unpack(self.FRAME_HEADER_FMT, header)
+        if size <= 0:
+            return None
+        return self._recv_exact(conn, int(size))
+
+    def _recv_exact(self, conn, size):
+        data = ""
+        while len(data) < size:
+            chunk = conn.recv(size - len(data))
+            if not chunk:
+                return None
+            data += chunk
+        return data
+
+    def _handle_payload(self, payload):
+        if not payload:
+            return
+        try:
+            prefix = self.CONTROL_PREFIX
+            if payload.startswith(prefix):
+                text = payload[len(prefix):]
+                if text and self._tts_service:
+                    self._tts_service.say(str(text))
+        except Exception as e:
+            self.logger.error("TTSControl payload error: %s" % str(e))
+
+    def _stop_server(self):
+        if self._server:
+            try:
+                self._server.close()
+            except Exception:
+                pass
+        self._server = None
+        if self._thread and self._thread.is_alive():
+            self._thread.join(1.5)
+        self._thread = None
+              ]]></content></script>
+              <Input name="onLoad" type="1" type_size="1" nature="0" inner="1" id="1" />
+              <Input name="onStart" type="1" type_size="1" nature="2" inner="0" id="2" />
+              <Input name="onStop" type="1" type_size="1" nature="3" inner="0" id="3" />
+              <Output name="onStopped" type="1" type_size="1" nature="1" inner="0" id="4" />
+            </Box>
+
+            <Link inputowner="1" indexofinput="2" outputowner="0" indexofoutput="2" />
+            <Link inputowner="2" indexofinput="2" outputowner="0" indexofoutput="2" />
+            <Link inputowner="3" indexofinput="2" outputowner="0" indexofoutput="2" />
+
+            <Link inputowner="1" indexofinput="3" outputowner="0" indexofoutput="3" />
+            <Link inputowner="2" indexofinput="3" outputowner="0" indexofoutput="3" />
+            <Link inputowner="3" indexofinput="3" outputowner="0" indexofoutput="3" />
+
+            <Link inputowner="0" indexofinput="4" outputowner="1" indexofoutput="4" />
+
+          </Diagram>
+        </BehaviorKeyframe>
+      </BehaviorLayer>
+    </Timeline>
+  </Box>
+</ChoregrapheProject>

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pepper - Interface Legacy</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 12px; background: #f2f4f7; color: #1f2937; }
+    h1 { font-size: 26px; margin: 0 0 10px 0; color: #0f4c81; }
+    .box { background: #fff; border: 1px solid #d7dde8; border-radius: 10px; padding: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .status { font-weight: bold; color: #334155; }
+    button { display: block; width: 100%; font-size: 18px; padding: 12px; margin: 8px 0; border: 0; border-radius: 8px; background: #0f4c81; color: #fff; }
+    button.alt { background: #475569; }
+    #event { font-size: 16px; min-height: 20px; color: #0b5d1e; }
+    #product { font-size: 16px; line-height: 1.45; }
+    #top3 button { margin-top: 6px; background: #14532d; }
+    #log { white-space: pre-wrap; font-size: 13px; max-height: 200px; overflow-y: auto; color: #334155; background: #f8fafc; border-radius: 8px; padding: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Pepper - Interface Legacy</h1>
+  <div class="box">
+    <div id="status" class="status">Connexion WS...</div>
+    <div id="event"></div>
+  </div>
+
+  <div class="box">
+    <button onclick="startVisualScan()">Scanner produit (visuel)</button>
+    <button class="alt" onclick="startBarcodeScan()">Scanner code-barres</button>
+    <button class="alt" onclick="startVoiceQuestion()">Poser une question (vocale)</button>
+  </div>
+
+  <div class="box">
+    <div><strong>Top-3 propositions</strong></div>
+    <div id="top3"></div>
+  </div>
+
+  <div class="box">
+    <div><strong>Produit détecté</strong></div>
+    <div id="product">Aucun produit affiché.</div>
+  </div>
+
+  <div class="box">
+    <div><strong>Logs</strong></div>
+    <div id="log"></div>
+  </div>
+
+  <script>
+    (function () {
+      var host = window.location.hostname || "localhost";
+      var wsUrl = "";
+      try {
+        var match = window.location.search.match(/[?&]ws=([^&]+)/);
+        if (match && match[1]) {
+          wsUrl = decodeURIComponent(match[1]);
+        }
+      } catch (e) {}
+      if (!wsUrl) {
+        wsUrl = "ws://" + host + ":8765";
+      }
+      var ws = null;
+
+      function log(msg) {
+        var el = document.getElementById("log");
+        var line = "[" + new Date().toLocaleTimeString() + "] " + msg;
+        el.textContent = line + "\n" + el.textContent;
+      }
+
+      function setStatus(msg) {
+        document.getElementById("status").textContent = msg;
+      }
+
+      function setEvent(msg) {
+        document.getElementById("event").textContent = msg || "";
+      }
+
+      function renderProduct(product) {
+        var box = document.getElementById("product");
+        if (!product) {
+          box.textContent = "Aucun produit affiché.";
+          return;
+        }
+        var name = product.name || "Produit inconnu";
+        var brand = product.brand || "";
+        var price = (typeof product.price === "number" && product.price > 0) ? (product.price.toFixed(2) + " €") : "Prix non disponible";
+        var usage = product.usage || "Pas d'information disponible";
+        var ean = product.ean || "";
+        box.innerHTML = "<strong>" + name + "</strong><br>" +
+          (brand ? ("Marque: " + brand + "<br>") : "") +
+          "EAN: " + ean + "<br>" +
+          "Prix: " + price + "<br>" +
+          "Usage: " + usage;
+      }
+
+      function renderTop3(results) {
+        var container = document.getElementById("top3");
+        container.innerHTML = "";
+        if (!results || !results.length) {
+          container.textContent = "Aucune proposition.";
+          return;
+        }
+        var i;
+        for (i = 0; i < results.length; i++) {
+          (function (idx) {
+            var r = results[idx];
+            var btn = document.createElement("button");
+            btn.textContent = (idx + 1) + ". " + (r.name || "Produit") + " (" + Math.round((r.confidence || 0) * 100) + "%)";
+            btn.onclick = function () {
+              sendCommand("confirm_product", { ean: r.ean || "", index: idx });
+              setEvent("Validation du produit...");
+            };
+            container.appendChild(btn);
+          })(i);
+        }
+      }
+
+      function handleMessage(raw) {
+        log("RX: " + raw);
+        try {
+          var msg = JSON.parse(raw);
+
+          if (msg.type === "status") {
+            setStatus("WS connecté: " + wsUrl);
+            return;
+          }
+
+          if (msg.type === "product_identified") {
+            setEvent("Produit identifié.");
+            renderProduct(msg.product);
+            return;
+          }
+
+          if (msg.type === "top3_results") {
+            setEvent("Choisissez un produit parmi la liste.");
+            renderTop3(msg.results || []);
+            return;
+          }
+
+          if (msg.type === "barcode_detected") {
+            setEvent("Code-barres détecté: " + (msg.ean || ""));
+            if (msg.product) {
+              renderProduct(msg.product);
+            }
+            return;
+          }
+
+          if (msg.type === "barcode_failed") {
+            setEvent("Code-barres non reconnu. Réessayez.");
+            return;
+          }
+
+          if (msg.type === "qa_answer") {
+            setEvent("Réponse Pepper reçue.");
+            alert("Pepper: " + (msg.answer || ""));
+            return;
+          }
+
+          if (msg.type === "security_alert") {
+            setEvent((msg.title || "Info") + ": " + (msg.message || ""));
+            return;
+          }
+
+          if (msg.type === "error") {
+            setEvent("Erreur: " + (msg.message || ""));
+            return;
+          }
+        } catch (e) {
+          log("Erreur parsing: " + e);
+        }
+      }
+
+      function connect() {
+        try {
+          ws = new WebSocket(wsUrl);
+          ws.onopen = function () {
+            setStatus("WS connecté: " + wsUrl);
+            log("WS open");
+          };
+          ws.onclose = function () {
+            setStatus("WS déconnecté, reconnexion...");
+            log("WS close");
+            setTimeout(connect, 2000);
+          };
+          ws.onerror = function () {
+            setStatus("Erreur WS, reconnexion...");
+            log("WS error");
+          };
+          ws.onmessage = function (ev) {
+            handleMessage(ev.data);
+          };
+        } catch (e) {
+          setStatus("Erreur WS, retry...");
+          setTimeout(connect, 2000);
+        }
+      }
+
+      window.sendCommand = function (command, data) {
+        if (!ws || ws.readyState !== 1) {
+          setEvent("WebSocket non connecté.");
+          log("WS non connecté");
+          return;
+        }
+        var payload = {
+          type: "command",
+          command: command,
+          data: data || {},
+          timestamp: Date.now()
+        };
+        ws.send(JSON.stringify(payload));
+      };
+
+      window.startVisualScan = function () {
+        setEvent("Scan visuel en cours...");
+        sendCommand("start_visual_scan", {});
+      };
+
+      window.startBarcodeScan = function () {
+        setEvent("Scan code-barres en cours...");
+        sendCommand("start_barcode_scan", {});
+      };
+
+      window.startVoiceQuestion = function () {
+        setEvent("Parlez maintenant (mode vocal fallback)...");
+        sendCommand("start_voice_question", { duration_s: 9 });
+      };
+
+      connect();
+    })();
+  </script>
+</body>
+</html>

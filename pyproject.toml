@@ -1,0 +1,86 @@
+[project]
+name = "parapharma-assistant"
+version = "1.0.0"
+description = "Assistant vocal parapharmacie pour robot Pepper - Projet AMS"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Projet AMS - Master 2"}
+]
+keywords = ["pepper", "robot", "assistant", "parapharmacie", "openai", "vlm", "audio"]
+
+dependencies = [
+    # Audio
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "sounddevice>=0.4.6",
+
+    # OpenAI Realtime
+    "websockets>=12.0",
+    "openai>=1.0.0",
+
+    # Vision / VLM
+    "pillow>=10.0.0",
+    "pyzbar>=0.1.9",
+
+    # Database
+    "aiosqlite>=0.19.0",
+
+    # Tablet WebSocket Server
+    "websockets>=12.0",
+
+    # Utilities
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+pepper = [
+    # NAOqi SDK (installation manuelle requise)
+    # qi  # Fourni par Aldebaran/SoftBank
+]
+vlm = [
+    # MLX pour Apple Silicon
+    "mlx>=0.5.0",
+    "mlx-vlm>=0.1.0",
+    # Évite l'erreur tokenizer avec certains environnements pip mixtes
+    "mistral-common[image,hf-hub]>=1.8.8",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+all = [
+    "parapharma-assistant[vlm,dev]",
+]
+
+[project.scripts]
+parapharma = "assistant.main:main"
+parapharma-demo = "scripts.run_demo:main"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.json", "*.wav", "*.html", "*.css", "*.js"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "W", "I", "N"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = "test_*.py"

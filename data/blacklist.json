@@ -1,0 +1,533 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "description": "Liste noire des codes EAN médicaments pour filtrage",
+    "last_updated": "2025-01-22",
+    "note": "Cette liste contient des exemples de codes EAN de médicaments courants. Le robot doit refuser de donner des informations sur ces produits et rediriger vers le pharmacien."
+  },
+  "prefixes": [
+    {
+      "prefix": "340",
+      "description": "Médicaments France - Code CIP ancien format"
+    },
+    {
+      "prefix": "3400",
+      "description": "Médicaments France - Code CIP-13"
+    },
+    {
+      "prefix": "3401",
+      "description": "Médicaments France - Code CIP-13 étendu"
+    }
+  ],
+  "ean_codes": [
+    {
+      "ean13": "3400930000014",
+      "description": "Doliprane 500mg",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000021",
+      "description": "Doliprane 1000mg",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000038",
+      "description": "Efferalgan 500mg",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000045",
+      "description": "Efferalgan 1000mg",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000052",
+      "description": "Dafalgan 500mg",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000069",
+      "description": "Dafalgan 1000mg",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000076",
+      "description": "Advil 200mg",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000083",
+      "description": "Advil 400mg",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000090",
+      "description": "Nurofen 200mg",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000106",
+      "description": "Nurofen 400mg",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000113",
+      "description": "Spasfon",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000120",
+      "description": "Gaviscon",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000137",
+      "description": "Maalox",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000144",
+      "description": "Smecta",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000151",
+      "description": "Imodium",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000168",
+      "description": "Vogalib",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000175",
+      "description": "Motilium",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000182",
+      "description": "Strepsils",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000199",
+      "description": "Drill Maux de Gorge",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000205",
+      "description": "Lysopaïne",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000212",
+      "description": "Hexaspray",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000229",
+      "description": "Rhinadvil",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000236",
+      "description": "Humex Rhume",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000243",
+      "description": "Actifed Rhume",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000250",
+      "description": "Dolirhume",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000267",
+      "description": "Fervex",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000274",
+      "description": "Oscillococcinum",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000281",
+      "description": "Homeovox",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000298",
+      "description": "Stodal",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000304",
+      "description": "Mucomyst",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000311",
+      "description": "Fluimucil",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000328",
+      "description": "Bronchokod",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000335",
+      "description": "Toplexil",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000342",
+      "description": "Tussidane",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000359",
+      "description": "Claradol",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000366",
+      "description": "Zyrtec",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000373",
+      "description": "Aerius",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000380",
+      "description": "Xyzall",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000397",
+      "description": "Voltarene",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000403",
+      "description": "Flector",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000410",
+      "description": "Ketum",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000427",
+      "description": "Aspegic 500mg",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000434",
+      "description": "Aspegic 1000mg",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000441",
+      "description": "Aspirine UPSA",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000458",
+      "description": "Kardegic",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000465",
+      "description": "Biseptine",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000472",
+      "description": "Betadine",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000489",
+      "description": "Hexomedine",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000496",
+      "description": "Biafine",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000502",
+      "description": "Cicatryl",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000519",
+      "description": "Dermoplasmine",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000526",
+      "description": "Homéoplasmine",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000533",
+      "description": "Arnica Montana",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000540",
+      "description": "Arnigel",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000557",
+      "description": "Synthol",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000564",
+      "description": "Percutalgine",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000571",
+      "description": "Contractubex",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000588",
+      "description": "Dulcolax",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000595",
+      "description": "Microlax",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000601",
+      "description": "Forlax",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000618",
+      "description": "Movicol",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000625",
+      "description": "Duphalac",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000632",
+      "description": "Normacol",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000649",
+      "description": "Spedifen",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000656",
+      "description": "Antarene",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000663",
+      "description": "Biprofenid",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000670",
+      "description": "Profenid",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000687",
+      "description": "Daflon",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000694",
+      "description": "Veinotonyl",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000700",
+      "description": "Ginkor Fort",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000717",
+      "description": "Sedorrhoide",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000724",
+      "description": "Proctolog",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000731",
+      "description": "Donormyl",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000748",
+      "description": "Noctamide",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000755",
+      "description": "Théralène",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000762",
+      "description": "Euphytose",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000779",
+      "description": "Spasmine",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000786",
+      "description": "Sedariston",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000793",
+      "description": "Magne B6",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000809",
+      "description": "Magnespasmyl",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000816",
+      "description": "Berocca",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000823",
+      "description": "Supradyn",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000830",
+      "description": "Pharmaton",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000847",
+      "description": "Gydrelle Phyto",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000854",
+      "description": "Serelys",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000861",
+      "description": "Ymea Ménopause",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000878",
+      "description": "Actiferol",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000885",
+      "description": "Tardyferon",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000892",
+      "description": "Tiorfan",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000908",
+      "description": "Lacteol",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000915",
+      "description": "Ultra Levure",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000922",
+      "description": "Carbolevure",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000939",
+      "description": "Arkorelax",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000946",
+      "description": "Valdispert",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000953",
+      "description": "Passiflore",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000960",
+      "description": "Codoliprane",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000977",
+      "description": "Lamaline",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000984",
+      "description": "Ixprim",
+      "reason": "medicament"
+    },
+    {
+      "ean13": "3400930000991",
+      "description": "Tramadol",
+      "reason": "medicament"
+    }
+  ],
+  "categories_medicales": [
+    "Antalgique",
+    "Anti-inflammatoire",
+    "Antipyrétique",
+    "Antitussif",
+    "Antihistaminique",
+    "Laxatif",
+    "Antidiarrhéique",
+    "Antiseptique",
+    "Antibiotique",
+    "Antifongique",
+    "Anxiolytique",
+    "Somnifère"
+  ]
+}

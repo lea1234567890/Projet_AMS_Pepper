@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assistant Parapharmacie - Pepper</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="screen-home" class="screen active">
+        <div class="home-container">
+            <h1 class="home-title">Bonjour !</h1>
+
+            <div class="home-buttons">
+                <button class="home-btn home-btn-product" onclick="App.showScreen('scan-choice')">
+                    <span class="btn-icon"></span>
+                    <span class="btn-text">PRODUIT</span>
+                </button>
+
+                <button class="home-btn home-btn-question" onclick="App.showScreen('advice')">
+                    <span class="btn-icon"></span>
+                    <span class="btn-text">QUESTION</span>
+                </button>
+            </div>
+
+            <p id="ws-status" class="ws-status">WebSocket: Connexion...</p>
+
+        </div>
+    </div>
+
+    <div id="screen-scan-choice" class="screen">
+        <div class="scan-choice-container">
+            <h2>Comment souhaitez-vous identifier le produit ?</h2>
+
+            <div class="scan-choice-buttons">
+                <button class="scan-choice-btn" onclick="App.startVisualScan()">
+                    <span class="btn-icon">📷</span>
+                    <span class="btn-text">Montrer le produit</span>
+                </button>
+
+                <button class="scan-choice-btn" onclick="App.startBarcodeScan()">
+                    <span class="btn-icon"></span>
+                    <span class="btn-text">Scanner le code-barres</span>
+                </button>
+            </div>
+
+            <button class="back-btn" onclick="App.showScreen('home')">
+                ← Retour à l'accueil
+            </button>
+        </div>
+    </div>
+
+    <div id="screen-barcode-scan" class="screen">
+        <div class="barcode-container">
+            <h2>Scan du code-barres</h2>
+
+            <div class="barcode-animation">
+                <div class="barcode-frame">
+                    <div class="scan-line"></div>
+                </div>
+            </div>
+
+            <div class="barcode-status">
+                <div id="barcode-status-icon" class="status-icon waiting">⏳</div>
+                <p id="barcode-status-text">En attente du code-barres...</p>
+            </div>
+
+            <div class="barcode-buttons">
+                <button class="secondary-btn" onclick="App.showScreen('scan-choice')">
+                    ← Changer de méthode
+                </button>
+                <button class="back-btn" onclick="App.showScreen('home')">
+                    Retour à l'accueil
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-top3" class="screen">
+        <div class="top3-container">
+            <h2>Est-ce l'un de ces produits ?</h2>
+
+            <div class="top3-cards" id="top3-cards">
+                <!-- Cartes générées dynamiquement -->
+            </div>
+
+            <div class="top3-buttons">
+                <button class="secondary-btn" onclick="App.startBarcodeScan()">
+                    Aucun de ces produits → Scanner le code-barres
+                </button>
+                <button class="back-btn" onclick="App.showScreen('home')">
+                    Retour à l'accueil
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-product" class="screen">
+        <div class="product-container">
+            <div class="product-card">
+                <div class="product-image-container">
+                    <img id="product-image" src="" alt="Photo du produit">
+                </div>
+
+                <div class="product-info">
+                    <h2 id="product-name">Nom du produit</h2>
+                    <p id="product-brand" class="product-brand">Marque</p>
+                    <p id="product-price" class="product-price">0,00 €</p>
+
+                    <div class="product-details">
+                        <div class="detail-section">
+                            <h3>Usage</h3>
+                            <p id="product-usage">Description de l'usage...</p>
+                        </div>
+
+                        <div class="detail-section">
+                            <h3>Type de cheveux</h3>
+                            <p id="product-hair-type">Type de cheveux...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-buttons">
+                <button id="product-voice-start-btn" class="secondary-btn" onclick="App.startVoiceQuestion()">
+                    🎤 Poser une question vocale
+                </button>
+                <button id="product-voice-send-btn" class="secondary-btn" style="display:none;" onclick="App.stopVoiceQuestion()">
+                    ✅ Envoyer la question
+                </button>
+                <button class="primary-btn" onclick="App.showScreen('scan-choice')">
+                    Nouveau produit
+                </button>
+                <button class="back-btn" onclick="App.showScreen('home')">
+                    ← Retour à l'accueil
+                </button>
+            </div>
+            <p id="product-voice-transcript-preview" class="voice-transcript-preview"></p>
+        </div>
+    </div>
+
+    <div id="screen-advice" class="screen">
+        <div class="advice-container">
+            <h2>Conseils capillaires</h2>
+
+            <div class="detail-section">
+                <h3>Question vocale</h3>
+                <div class="product-buttons">
+                    <button id="voice-start-btn" class="primary-btn" onclick="App.startVoiceQuestion()">
+                        🎤 Poser une question vocale
+                    </button>
+                    <button id="voice-send-btn" class="secondary-btn" style="display:none;" onclick="App.stopVoiceQuestion()">
+                        ✅ Envoyer la question
+                    </button>
+                    <button id="text-question-btn" class="secondary-btn" style="display:none;" onclick="App.askTextQuestion()">
+                        ⌨️ Question écrite (secours)
+                    </button>
+                </div>
+                <p id="voice-transcript-preview" class="voice-transcript-preview"></p>
+            </div>
+
+            <div id="advice-answer-box" class="advice-answer-box" style="display:none;">
+                <h3>Réponse Pepper</h3>
+                <p id="advice-answer-text"></p>
+            </div>
+
+            <div id="advice-reco-section" class="advice-reco-section" style="display:none;">
+                <h3>Produits recommandés</h3>
+                <div class="advice-reco-grid" id="advice-reco-grid"></div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-buttons" id="filter-buttons">
+                    <button class="filter-btn active" data-filter="all" onclick="App.filterProducts('all')">
+                        Tous
+                    </button>
+                    <button class="filter-btn" data-filter="secs" onclick="App.filterProducts('secs')">
+                        Cheveux secs
+                    </button>
+                    <button class="filter-btn" data-filter="gras" onclick="App.filterProducts('gras')">
+                        Cheveux gras
+                    </button>
+                    <button class="filter-btn" data-filter="normaux" onclick="App.filterProducts('normaux')">
+                        Cheveux normaux
+                    </button>
+                    <button class="filter-btn" data-filter="colores" onclick="App.filterProducts('colores')">
+                        Cheveux colorés
+                    </button>
+                    <button class="filter-btn" data-filter="pellicules" onclick="App.filterProducts('pellicules')">
+                        Anti-pelliculaire
+                    </button>
+                    <button class="filter-btn" data-filter="sensibles" onclick="App.filterProducts('sensibles')">
+                        Cuir chevelu sensible
+                    </button>
+                    <button class="filter-btn" data-filter="abimes" onclick="App.filterProducts('abimes')">
+                        Cheveux abîmés/chute
+                    </button>
+                    <button class="filter-btn" data-filter="autres" onclick="App.filterProducts('autres')">
+                        Autres besoins
+                    </button>
+                </div>
+            </div>
+
+            <div class="products-grid" id="products-grid">
+                <!-- Produits générés dynamiquement -->
+            </div>
+
+            <button class="back-btn" onclick="App.showScreen('home')">
+                ← Retour à l'accueil
+            </button>
+        </div>
+    </div>
+
+    <div id="screen-security" class="screen">
+        <div class="security-container">
+            <div class="security-icon"></div>
+            <h2 id="security-title">Information importante</h2>
+            <p id="security-message" class="security-message">Message de sécurité...</p>
+
+            <button class="primary-btn" onclick="App.showScreen('home')">
+                Retour à l'accueil
+            </button>
+        </div>
+    </div>
+
+    <div id="screen-loading" class="screen">
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p id="loading-text">Analyse en cours...</p>
+        </div>
+    </div>
+
+    <script>
+        // Affiche les erreurs JS directement sur l'écran d'accueil Pepper.
+        window.onerror = function (msg) {
+            try {
+                var status = document.getElementById("ws-status");
+                if (status) {
+                    status.textContent = "Erreur JavaScript: " + msg;
+                }
+            } catch (e) {}
+        };
+    </script>
+    <script src="app_legacy_ui.js?v=20260304-2"></script>
+</body>
+</html>

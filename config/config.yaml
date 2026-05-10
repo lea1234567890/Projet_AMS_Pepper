@@ -1,0 +1,165 @@
+# Configuration Principale - Parapharma Assistant
+
+# Mode d'exécution
+mode: development  # development | production | simulation | test
+
+# Robot Pepper
+pepper:
+  ip: ""  # Laisser vide pour mode simulation
+  port: 9559
+  # Fallback si qi absent sur le Mac: bridge SSH vers Pepper
+  ssh_user: nao
+  ssh_port: 22
+  ssh_python: python
+  force_ssh_bridge: false
+  # Timeouts (secondes)
+  connection_timeout: 10
+  command_timeout: 5
+
+# Audio Pipeline
+audio:
+  # Capture depuis Pepper
+  capture:
+    sample_rate: 48000
+    channels: 4  # Microphones Pepper (front, rear, left, right)
+    buffer_size: 1024
+    tcp_port: 5555
+
+  # Playback vers Pepper
+  playback:
+    sample_rate: 48000
+    channels: 2  # Stereo
+    tcp_port: 5556
+
+  # Traitement audio
+  processing:
+    preset: noisy_room  # quiet_room | noisy_room | far_field | close_talk
+    beamforming:
+      enabled: true
+      front_weight: 0.60
+      rear_weight: 0.05
+    noise_reduction:
+      enabled: true
+      strength: 0.3
+    agc:
+      enabled: true
+      target_db: -20
+      min_gain: 10
+      max_gain: 20
+
+# OpenAI Realtime API
+openai:
+  model: gpt-4o-realtime-preview-2024-12-17
+  http_fallback_model: gpt-4o-mini
+  http_transcription_model: whisper-1
+  voice: shimmer  # nova, shimmer, alloy, echo, fable, onyx
+
+  # VAD (Voice Activity Detection)
+  vad:
+    type: server_vad
+    threshold: 0.5
+    prefix_padding_ms: 300
+    silence_duration_ms: 500
+
+  # Presets VAD par situation
+  vad_presets:
+    default:
+      threshold: 0.5
+      silence_duration_ms: 500
+    hesitant:
+      threshold: 0.4
+      silence_duration_ms: 800
+    fast:
+      threshold: 0.6
+      silence_duration_ms: 350
+    noisy:
+      threshold: 0.7
+      silence_duration_ms: 600
+    elderly:
+      threshold: 0.4
+      silence_duration_ms: 1200
+
+# Vision / VLM
+vision:
+  model: mlx-community/Qwen2-VL-2B-Instruct-4bit
+
+  # Seuils de confiance
+  confidence:
+    high: 0.85      # Identification directe
+    medium: 0.60    # Top-3 pour confirmation
+    low: 0.40       # Fallback code-barres
+
+  # Capture d'images
+  capture:
+    num_frames: 3
+    interval_ms: 200
+    width: 640
+    height: 480
+
+  # Barcode
+  barcode:
+    enabled: true
+    formats: [EAN13, EAN8, CODE128]
+
+# Base de données
+database:
+  path: data/products.db
+  blacklist_path: data/blacklist.json
+
+  # Options SQLite
+  options:
+    journal_mode: WAL
+    synchronous: NORMAL
+    cache_size: 10000
+
+# Sécurité
+security:
+  # Vérifications activées
+  checks:
+    ean_blacklist: true
+    medical_keywords: true
+    dangerous_use: true
+    animal_use: true
+
+  # Latence cible filtre (ms)
+  filter_latency_target_ms: 1.0
+
+  # Mode strict (refuse tout terme médical)
+  strict_mode: true
+
+# Orchestrateur
+orchestrator:
+  # Timeouts (secondes)
+  timeouts:
+    idle: 60
+    greeting: 10
+    intent: 30
+    scan: 15
+    confirm: 20
+    conversation: 45
+
+  # LEDs
+  led_fade_duration_ms: 300
+
+  # Queue
+  max_queue_size: 100
+
+# Interface Tablette
+tablet:
+  # Serveur WebSocket
+  server:
+    host: 0.0.0.0
+    port: 8765
+    ping_interval: 30
+    ping_timeout: 10
+
+# Logging
+logging:
+  level: INFO  # DEBUG | INFO | WARNING | ERROR
+  format: jsonl
+  file: logs/assistant.jsonl
+  console: true
+
+  # Rotation
+  max_size_mb: 10
+  backup_count: 5
