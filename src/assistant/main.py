@@ -1673,7 +1673,12 @@ class PepperAssistant:
         self.logger.log_warning("  Scan code-barres stream: échec, aucun EAN détecté après toutes les frames")
         return False, "", None
 
-    async def _run_barcode_scan_sequence(self, websocket, intro_message: str = "") -> bool:
+    async def _run_barcode_scan_sequence(
+        self,
+        websocket,
+        intro_message: str = "",
+        show_scan_choice_on_fail: bool = True,
+    ) -> bool:
         # Exécute un scan code-barres complet + notifications tablette/robot.
         await self.tablet_server.send_show_screen(websocket, "barcode-scan")
         await self._set_scan_led((255, 140, 0))
@@ -1697,7 +1702,8 @@ class PepperAssistant:
         await self._set_scan_led((220, 30, 30))
         await self._say_scan_status("Je n'ai pas détecté le code barres.")
         await self.tablet_server.send_barcode_failed(websocket)
-        await self.tablet_server.send_show_screen(websocket, "scan-choice")
+        if show_scan_choice_on_fail:
+            await self.tablet_server.send_show_screen(websocket, "scan-choice")
         self.logger.log_warning("  Tablette: scan code-barres terminé sans résultat")
         return False
 
@@ -1769,19 +1775,13 @@ class PepperAssistant:
                         await self.tablet_server._send_error(websocket, str(payload))
                         await self.tablet_server.send_show_screen(websocket, "scan-choice")
                 elif mode == "barcode":
-                    if scan_timeout_s > 0:
-                        await asyncio.wait_for(
-                            self._run_barcode_scan_sequence(
-                                websocket,
-                                intro_message="Je passe au scan du code barres.",
-                            ),
-                            timeout=scan_timeout_s,
-                        )
-                    else:
-                        await self._run_barcode_scan_sequence(
-                            websocket,
-                            intro_message="Je passe au scan du code barres.",
-                        )
+                    # VLM confiance insuffisante : demander nouvelle capture, pas fallback barcode
+                    await self._set_scan_led((220, 30, 30))
+                    await self._say_scan_status(
+                        "Je n'ai pas pu identifier le produit. "
+                        "Rapprochez-le ou orientez-le différemment et réessayez."
+                    )
+                    await self.tablet_server.send_show_screen(websocket, "scan-choice")
                 else:
                     await self.tablet_server.send_show_screen(websocket, "barcode-scan")
             except asyncio.TimeoutError:
@@ -1818,13 +1818,44 @@ class PepperAssistant:
                 if self.adapter and hasattr(self.adapter, "freeze_head"):
                     await asyncio.to_thread(self.adapter.freeze_head)
                 scan_timeout_s = self._get_scan_operation_timeout_s()
-                if scan_timeout_s > 0:
-                    await asyncio.wait_for(
-                        self._run_barcode_scan_sequence(websocket),
-                        timeout=scan_timeout_s,
+
+                async def _barcode_then_vlm_fallback():
+                    barcode_ok = await self._run_barcode_scan_sequence(
+                        websocket, show_scan_choice_on_fail=False
                     )
+                    if barcode_ok:
+                        return
+                    # Barcode échoué : fallback automatique vers scan VLM
+                    self.logger.log_info("  Tablette: barcode échoué, bascule scan visuel (VLM)")
+                    await self._say_scan_status(
+                        "Je n'ai pas réussi à lire le code barres. Je passe au scan visuel."
+                    )
+                    await asyncio.sleep(0.4)
+                    await self._set_scan_led((140, 0, 255))
+                    mode, payload = await self._perform_visual_scan()
+                    if mode == "product":
+                        await self._set_scan_led((0, 190, 0))
+                        await self.tablet_server.send_product_identified(
+                            websocket, self._to_tablet_product(payload)
+                        )
+                        self._sync_current_product_context(payload)
+                    elif mode == "top3":
+                        await self._set_scan_led((255, 140, 0))
+                        top3 = [self._to_tablet_top3_result(item) for item in payload]
+                        await self.tablet_server.send_top3_results(websocket, top3)
+                    else:
+                        # VLM aussi échoué : demander une nouvelle capture
+                        await self._set_scan_led((220, 30, 30))
+                        await self._say_scan_status(
+                            "Je n'ai pas pu identifier le produit. "
+                            "Rapprochez-le ou orientez-le différemment et réessayez."
+                        )
+                        await self.tablet_server.send_show_screen(websocket, "scan-choice")
+
+                if scan_timeout_s > 0:
+                    await asyncio.wait_for(_barcode_then_vlm_fallback(), timeout=scan_timeout_s)
                 else:
-                    await self._run_barcode_scan_sequence(websocket)
+                    await _barcode_then_vlm_fallback()
             except asyncio.TimeoutError:
                 self.logger.log_warning("  Tablette: scan code-barres interrompu (timeout de sécurité)")
                 await self._set_scan_led((220, 30, 30))
