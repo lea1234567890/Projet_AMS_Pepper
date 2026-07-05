@@ -1,69 +1,62 @@
-# Projet AMS Pepper (Open AI)
+# Projet AMS Pepper - Assistant IA en parapharmacie
 
-Il contient:
-- 1 package Choregraphe
-- backend Python complet
-- tablette web
-- base produits
-- scripts de lancement
+Projet réalisé en Master, dans le cadre du projet AMS autour du robot Pepper.
 
-## Choregraphe
+Ce projet est un assistant conversationnel pour un contexte de parapharmacie. Il combine un backend Python, une interface tablette, un package Choregraphe pour Pepper, une base produits SQLite et des briques IA pour le dialogue, la voix, la vision et la sécurisation des réponses.
 
-Ouvrir ce fichier:
+## Compétences mises en avant
 
-- `choregraphe_package/Parapharmacie_OpenAI/Parapharmacie_OpenAI.pml`
+- Architecture d'un système robotique complet autour de Pepper.
+- Backend Python structuré avec configuration, orchestration et logs.
+- Connexion robot/backend/tablette via réseau, TCP et WebSocket.
+- Utilisation de l'API OpenAI Realtime, transcription et synthèse vocale.
+- Vision produit avec modèle VLM et fallback par code-barres.
+- Base produits SQLite et règles de sécurité métier.
 
-Le comportement contient 3 boxes organisees:
-- `AudioBridge` : micro Pepper -> backend TCP
-- `VideoBridge` : camera Pepper -> backend TCP
-- `TTSControl` : backend -> voix Pepper
+## Fonctionnalités
 
-## Ou est la cle OpenAI
+- Dialogue vocal avec un utilisateur en magasin.
+- Interface tablette pour afficher les produits et les étapes de l'échange.
+- Identification produit par vision ou code-barres.
+- Filtrage de sécurité pour éviter les conseils médicaux risqués.
+- Mode simulation lorsque Pepper n'est pas disponible.
+- Package Choregraphe avec ponts audio, vidéo et voix.
 
-Dans ce fichier :
+## Technologies
 
-- `.env`
+Python, SQLite, OpenAI Realtime API, Whisper, WebSocket, TCP, Pepper, Choregraphe, NAOqi, HTML, CSS, JavaScript, YAML.
 
-Exemple de base:
+## Structure
 
-- `.env.example`
+- `src/assistant/` : backend principal.
+- `tablet/` : interface web pour la tablette Pepper.
+- `choregraphe_package/` : package Choregraphe.
+- `config/config.yaml` : configuration applicative.
+- `data/` : base produits de démonstration et blacklist.
 
-## Base de donnees et tablette
+## Configuration
 
-Elles sont incluses dans ce dossier:
-- `data/products.db`
-- `tablet/index.html`
-- `tablet/app_legacy_ui.js`
-- `tablet/styles.css`
-
-## Lancement (mode complet)
-
-1. Installer les deps
-
-```bash
-python3 -m pip install -r requirements.txt
-```
-
-2. Creer `.env`
+Créer un fichier `.env` à partir de l'exemple :
 
 ```bash
 cp .env.example .env
-# puis editer .env (OPENAI_API_KEY, PEPPER_IP)
 ```
 
-3. Lancer backend + tablette
+Puis renseigner les valeurs nécessaires, notamment la clé OpenAI et l'adresse de Pepper si le robot est utilisé.
+
+## Lancement
 
 ```bash
+python3 -m pip install -r requirements.txt
 ./run_all.sh
 ```
 
-4. Ouvrir Choregraphe
-- ouvrir `choregraphe_package/Parapharmacie_OpenAI/Parapharmacie_OpenAI.pml`
-- dans `AudioBridge` et `VideoBridge`, mettre `MAC_IP = <IP_DE_TON_PC>`
-- Run
+Pour Choregraphe, ouvrir :
 
-## Scripts
+```text
+choregraphe_package/Parapharmacie_OpenAI/Parapharmacie_OpenAI.pml
+```
 
-- `run_backend.sh` : backend complet (`assistant.main`)
-- `run_tablet.sh` : serveur web tablette
-- `run_all.sh` : lance tablette + backend
+## Notes
+
+La version publique ne contient pas de clé API. Les variables sensibles doivent rester dans `.env`, qui n'est pas versionné.

@@ -1,0 +1,12 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+logs/
+*.log
+*.sqlite-wal
+*.sqlite-shm
